@@ -37,6 +37,12 @@ android {
         jniLibs {
             useLegacyPackaging = true
         }
+        resources {
+            excludes += ['META-INF/DEPENDENCIES']
+        }
+    }
+    aaptOptions {
+        noCompress 'arsc'
     }
     namespace 'tdg.oculuswirelessadb'
 }
