@@ -1,0 +1,15 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scenes/wireless_adb.unity
+    guid: 344ccd69bc7526448b93cb404c16c79c
+  m_configObjects:
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
+    com.unity.xr.management.loader_settings: {fileID: 11400000, guid: d2ee0dba0c7cbb342954fe4cdea1a93a, type: 2}
+    com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 1468a61d57546464cb5513e7c1c9b463, type: 2}
+  m_UseUCBPForAssetBundles: 0

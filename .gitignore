@@ -87,3 +87,28 @@ script/platform-tools/
 script/test_*.py
 script/使用说明.md
 log.txt
+
+# Unity generated files
+quest3_wireless_adb/Library/
+quest3_wireless_adb/Temp/
+quest3_wireless_adb/Logs/
+quest3_wireless_adb/UserSettings/
+quest3_wireless_adb/obj/
+quest3_wireless_adb/.utmp/
+quest3_wireless_adb/*.csproj
+quest3_wireless_adb/*.sln
+
+# Unity build output
+quest3_wireless_adb/build/
+quest3_wireless_adb/Builds/
+
+# VS Code
+quest3_wireless_adb/.vscode/
+
+# Backup files
+*.backup
+
+# Windows system files
+nul
+Thumbs.db
+Desktop.ini
