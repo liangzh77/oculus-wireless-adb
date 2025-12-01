@@ -108,8 +108,9 @@ public class ADBManager : MonoBehaviour
         if (!HasRequiredPermissions())
         {
             Debug.LogWarning("[ADBManager] Missing WRITE_SECURE_SETTINGS permission");
-            statusMessage = "缺少权限，请执行:\n" + GetPermissionCommand();
+            statusMessage = "缺少权限！请在电脑端执行:\nadb shell pm grant\ncom.ChuJiao.quest3_wireless_adb\nandroid.permission.WRITE_SECURE_SETTINGS";
             OnStatusMessageUpdated?.Invoke(statusMessage);
+            OnADBStatusChanged?.Invoke(false);
             return;
         }
 

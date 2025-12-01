@@ -291,10 +291,32 @@ public class UnityADBBridge {
 
     /**
      * 检查是否有所需权限
+     * 通过尝试读取设置来验证权限，比checkSelfPermission更可靠
      */
     public boolean hasRequiredPermissions() {
-        return context.checkSelfPermission(Manifest.permission.WRITE_SECURE_SETTINGS)
-            == PackageManager.PERMISSION_GRANTED;
+        try {
+            // 尝试读取当前值
+            int currentValue = Settings.Global.getInt(
+                context.getContentResolver(),
+                "adb_wifi_enabled",
+                0
+            );
+
+            // 尝试写入相同的值（不改变实际状态）
+            Settings.Global.putInt(
+                context.getContentResolver(),
+                "adb_wifi_enabled",
+                currentValue
+            );
+
+            return true;
+        } catch (SecurityException e) {
+            Log.d(TAG, "No WRITE_SECURE_SETTINGS permission: " + e.getMessage());
+            return false;
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking permissions: " + e.getMessage());
+            return false;
+        }
     }
 
     /**

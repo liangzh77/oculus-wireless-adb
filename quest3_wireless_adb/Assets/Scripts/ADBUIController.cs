@@ -32,6 +32,9 @@ public class ADBUIController : MonoBehaviour
     [Tooltip("显示状态消息的文本")]
     public TextMeshProUGUI statusText;
 
+    [Tooltip("显示权限提示的文本（不会被状态消息覆盖）")]
+    public TextMeshProUGUI permissionText;
+
     [Tooltip("显示ADB启用状态的指示器")]
     public Image statusIndicator;
 
@@ -97,6 +100,15 @@ public class ADBUIController : MonoBehaviour
     {
         Debug.Log("[ADBUIController] Enable button clicked");
 
+        // 每次点击都重新检查权限状态
+        UpdatePermissionStatus();
+
+        // 如果没有权限，不继续执行
+        if (!adbManager.HasRequiredPermissions())
+        {
+            return;
+        }
+
         bool useTcpipMode = tcpipModeToggle != null && tcpipModeToggle.isOn;
         adbManager.EnableADB(useTcpipMode);
 
@@ -109,6 +121,15 @@ public class ADBUIController : MonoBehaviour
     {
         Debug.Log("[ADBUIController] Disable button clicked");
 
+        // 每次点击都重新检查权限状态
+        UpdatePermissionStatus();
+
+        // 如果没有权限，不继续执行
+        if (!adbManager.HasRequiredPermissions())
+        {
+            return;
+        }
+
         adbManager.DisableADB();
 
         // 更新UI反馈
@@ -119,6 +140,9 @@ public class ADBUIController : MonoBehaviour
     private void OnRefreshButtonClick()
     {
         Debug.Log("[ADBUIController] Refresh button clicked");
+
+        // 每次点击都重新检查权限状态
+        UpdatePermissionStatus();
 
         adbManager.UpdateStatus();
 
@@ -209,13 +233,25 @@ public class ADBUIController : MonoBehaviour
         OnConnectionInfoUpdated(adbManager.CurrentIP, adbManager.CurrentPort);
         OnStatusMessageUpdated(adbManager.StatusMessage);
 
-        // 检查权限
-        if (!adbManager.HasRequiredPermissions())
+        // 检查权限并更新权限提示
+        UpdatePermissionStatus();
+    }
+
+    /// <summary>
+    /// 更新权限状态提示
+    /// </summary>
+    private void UpdatePermissionStatus()
+    {
+        if (permissionText == null) return;
+
+        if (adbManager != null && !adbManager.HasRequiredPermissions())
         {
-            if (statusText != null)
-            {
-                statusText.text = "缺少权限！\n请执行:\n" + adbManager.GetPermissionCommand();
-            }
+            permissionText.gameObject.SetActive(true);
+            permissionText.text = "缺少权限！请在电脑端执行:\nadb shell pm grant com.ChuJiao.quest3_wireless_adb android.permission.WRITE_SECURE_SETTINGS";
+        }
+        else
+        {
+            permissionText.gameObject.SetActive(false);
         }
     }
 
