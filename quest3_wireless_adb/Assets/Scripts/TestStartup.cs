@@ -29,7 +29,7 @@ public class TestStartup : MonoBehaviour
         textObj.transform.rotation = Quaternion.identity;
 
         var textMesh = textObj.AddComponent<TextMesh>();
-        textMesh.text = "App Started!\nWireless ADB";
+        textMesh.text = "";
         textMesh.fontSize = 24;
         textMesh.characterSize = 0.05f;
         textMesh.color = Color.green;
