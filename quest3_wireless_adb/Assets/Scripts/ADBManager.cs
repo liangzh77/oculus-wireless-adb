@@ -300,6 +300,23 @@ public class ADBManager : MonoBehaviour
     {
         // 每5秒自动更新一次状态
         InvokeRepeating("UpdateStatus", 1f, 5f);
+
+        // 应用启动时自动启用ADB
+        Invoke("AutoEnableADB", 2f);
+    }
+
+    /// <summary>
+    /// 自动启用ADB（延迟调用，确保初始化完成）
+    /// </summary>
+    private void AutoEnableADB()
+    {
+#if UNITY_ANDROID && !UNITY_EDITOR
+        if (isInitialized && HasRequiredPermissions() && !isADBEnabled)
+        {
+            Debug.Log("[ADBManager] Auto-enabling ADB on startup");
+            EnableADB();
+        }
+#endif
     }
 
     void OnDestroy()
