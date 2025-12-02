@@ -18,7 +18,6 @@ public class UnityADBBridge {
 
     private Context context;
     private JmDNSAdbDiscoveryJava adbDiscovery;
-    private String adbPath;
 
     // 状态信息
     private String currentIP = "";
@@ -32,10 +31,9 @@ public class UnityADBBridge {
      */
     public UnityADBBridge(Context context) {
         this.context = context;
-        this.adbPath = context.getApplicationInfo().nativeLibraryDir + "/libadb.so";
         this.adbDiscovery = new JmDNSAdbDiscoveryJava(context);
 
-        Log.d(TAG, "UnityADBBridge initialized with ADB path: " + adbPath);
+        Log.d(TAG, "UnityADBBridge initialized");
 
         // 初始化时检查当前状态
         updateStatus();
@@ -43,11 +41,10 @@ public class UnityADBBridge {
 
     /**
      * 启用无线ADB
-     * @param useTcpipMode 是否使用tcpip 5555模式
      * @return 是否成功启动
      */
-    public boolean enableWirelessADB(final boolean useTcpipMode) {
-        Log.d(TAG, "Attempting to enable wireless ADB, tcpip mode: " + useTcpipMode);
+    public boolean enableWirelessADB() {
+        Log.d(TAG, "Attempting to enable wireless ADB");
 
         try {
             // 启用ADB WiFi
@@ -75,11 +72,6 @@ public class UnityADBBridge {
                             statusMessage = "ADB已启动: " + currentIP + ":" + currentPort;
 
                             Log.d(TAG, "ADB discovered at " + currentIP + ":" + currentPort);
-
-                            // 如果需要tcpip模式
-                            if (useTcpipMode) {
-                                enableTcpipMode();
-                            }
                         } else {
                             statusMessage = "无法发现ADB服务";
                             Log.w(TAG, "Failed to discover ADB service");
@@ -126,98 +118,6 @@ public class UnityADBBridge {
             Log.e(TAG, "Failed to disable wireless ADB", e);
             statusMessage = "禁用失败: " + e.getMessage();
             return false;
-        }
-    }
-
-    /**
-     * 启用tcpip 5555模式（需要先连接到主ADB端口）
-     */
-    private void enableTcpipMode() {
-        try {
-            // 检查是否已经有5555连接
-            if (checkAdbConnection("127.0.0.1", 5555)) {
-                statusMessage = currentIP + ":" + currentPort + "\n127.0.0.1:5555";
-                Log.d(TAG, "tcpip mode already active");
-                return;
-            }
-
-            // 检查主ADB连接
-            if (!checkAdbConnection(currentIP, currentPort)) {
-                statusMessage = "无法连接到ADB，请确保已授权";
-                Log.w(TAG, "Cannot connect to main ADB port");
-                return;
-            }
-
-            // 执行tcpip 5555命令
-            String output = runCommand(adbPath + " -s " + currentIP + ":" + currentPort + " tcpip 5555");
-
-            if (output != null && output.contains("restarting")) {
-                // 等待ADB服务重启
-                Thread.sleep(2000);
-
-                // 检查tcpip模式是否成功
-                if (checkAdbConnection("127.0.0.1", 5555)) {
-                    statusMessage = currentIP + ":" + currentPort + "\n127.0.0.1:5555";
-                    Log.d(TAG, "tcpip mode enabled successfully");
-                } else {
-                    statusMessage = "tcpip模式启动失败";
-                    Log.w(TAG, "Failed to verify tcpip mode");
-                }
-            } else {
-                statusMessage = "tcpip命令执行失败";
-                Log.w(TAG, "Unexpected output from tcpip command: " + output);
-            }
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error enabling tcpip mode", e);
-        }
-    }
-
-    /**
-     * 检查ADB连接
-     */
-    private boolean checkAdbConnection(String host, int port) {
-        String output = runCommand(adbPath + " connect " + host + ":" + port);
-        return output != null && output.contains("connected");
-    }
-
-    /**
-     * 执行命令
-     */
-    private String runCommand(String command) {
-        Log.d(TAG, "Running command: " + command);
-        try {
-            String[] parts = command.split("\\s+");
-            ProcessBuilder procBuilder = new ProcessBuilder(parts)
-                .directory(context.getFilesDir())
-                .redirectErrorStream(true);
-
-            procBuilder.environment().put("HOME", context.getFilesDir().getPath());
-            procBuilder.environment().put("TMPDIR", context.getCacheDir().getPath());
-
-            Process process = procBuilder.start();
-
-            // 读取输出
-            java.io.BufferedReader reader = new java.io.BufferedReader(
-                new java.io.InputStreamReader(process.getInputStream())
-            );
-
-            StringBuilder output = new StringBuilder();
-            String line;
-            while ((line = reader.readLine()) != null) {
-                output.append(line).append("\n");
-            }
-
-            reader.close();
-            process.waitFor();
-
-            String result = output.toString();
-            Log.d(TAG, "Command output: " + result);
-            return result;
-
-        } catch (Exception e) {
-            Log.e(TAG, "Error running command", e);
-            return null;
         }
     }
 

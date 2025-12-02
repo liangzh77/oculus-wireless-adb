@@ -115,11 +115,7 @@ public class ADBUISetup : MonoBehaviour
         Button refreshBtn = CreateButton(panelObj, "RefreshButton", "刷新状态",
             new Vector2(250, -100), new Vector2(200, 80), new Color(0.3f, 0.5f, 0.8f));
 
-        // 11. 创建 tcpip 模式开关
-        GameObject toggleObj = CreateToggle(panelObj, "TcpipModeToggle", "tcpip 5555 模式",
-            new Vector2(0, -220), new Vector2(400, 60));
-
-        // 12. 创建 ADB UI Controller 并关联组件
+        // 11. 创建 ADB UI Controller 并关联组件
         GameObject controllerObj = new GameObject("ADB UI Controller");
         controllerObj.transform.SetParent(canvasObj.transform, false);
 
@@ -131,7 +127,6 @@ public class ADBUISetup : MonoBehaviour
         controller.portText = portText;
         controller.statusText = statusText;
         controller.statusIndicator = indicatorImage;
-        controller.tcpipModeToggle = toggleObj.GetComponent<Toggle>();
         controller.enabledColor = enabledColor;
         controller.disabledColor = disabledColor;
         controller.neutralColor = neutralColor;
@@ -206,67 +201,6 @@ public class ADBUISetup : MonoBehaviour
         textRect.offsetMax = Vector2.zero;
 
         return button;
-    }
-
-    /// <summary>
-    /// 创建开关
-    /// </summary>
-    private GameObject CreateToggle(GameObject parent, string name, string labelText,
-        Vector2 position, Vector2 size)
-    {
-        GameObject toggleObj = new GameObject(name);
-        toggleObj.transform.SetParent(parent.transform, false);
-
-        RectTransform toggleRect = toggleObj.GetComponent<RectTransform>();
-        if (toggleRect == null)
-            toggleRect = toggleObj.AddComponent<RectTransform>();
-        toggleRect.anchoredPosition = position;
-        toggleRect.sizeDelta = size;
-
-        Toggle toggle = toggleObj.AddComponent<Toggle>();
-
-        // 创建背景
-        GameObject bgObj = new GameObject("Background");
-        bgObj.transform.SetParent(toggleObj.transform, false);
-
-        Image bgImage = bgObj.AddComponent<Image>();
-        bgImage.color = new Color(0.2f, 0.2f, 0.2f, 1f);
-
-        RectTransform bgRect = bgObj.GetComponent<RectTransform>();
-        bgRect.anchoredPosition = new Vector2(-150, 0);
-        bgRect.sizeDelta = new Vector2(60, 40);
-
-        // 创建勾选标记
-        GameObject checkmarkObj = new GameObject("Checkmark");
-        checkmarkObj.transform.SetParent(bgObj.transform, false);
-
-        Image checkmarkImage = checkmarkObj.AddComponent<Image>();
-        checkmarkImage.color = Color.green;
-
-        RectTransform checkmarkRect = checkmarkObj.GetComponent<RectTransform>();
-        checkmarkRect.anchorMin = Vector2.zero;
-        checkmarkRect.anchorMax = Vector2.one;
-        checkmarkRect.offsetMin = new Vector2(5, 5);
-        checkmarkRect.offsetMax = new Vector2(-5, -5);
-
-        toggle.targetGraphic = bgImage;
-        toggle.graphic = checkmarkImage;
-
-        // 创建标签
-        GameObject labelObj = new GameObject("Label");
-        labelObj.transform.SetParent(toggleObj.transform, false);
-
-        TextMeshProUGUI label = labelObj.AddComponent<TextMeshProUGUI>();
-        label.text = labelText;
-        label.fontSize = 32;
-        label.alignment = TextAlignmentOptions.Left;
-        label.color = Color.white;
-
-        RectTransform labelRect = labelObj.GetComponent<RectTransform>();
-        labelRect.anchoredPosition = new Vector2(50, 0);
-        labelRect.sizeDelta = new Vector2(300, 60);
-
-        return toggleObj;
     }
 
     /// <summary>

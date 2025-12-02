@@ -95,8 +95,7 @@ public class ADBManager : MonoBehaviour
     /// <summary>
     /// 启用无线ADB
     /// </summary>
-    /// <param name="useTcpipMode">是否使用tcpip 5555模式</param>
-    public void EnableADB(bool useTcpipMode = false)
+    public void EnableADB()
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
         if (!isInitialized)
@@ -116,11 +115,11 @@ public class ADBManager : MonoBehaviour
 
         try
         {
-            bool success = unityADBBridge.Call<bool>("enableWirelessADB", useTcpipMode);
+            bool success = unityADBBridge.Call<bool>("enableWirelessADB");
 
             if (success)
             {
-                Debug.Log($"[ADBManager] Wireless ADB enabled (tcpip mode: {useTcpipMode})");
+                Debug.Log("[ADBManager] Wireless ADB enabled");
 
                 // 延迟更新状态，等待ADB服务完全启动
                 Invoke("UpdateStatus", 2f);

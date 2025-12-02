@@ -38,10 +38,6 @@ public class ADBUIController : MonoBehaviour
     [Tooltip("显示ADB启用状态的指示器")]
     public Image statusIndicator;
 
-    [Header("tcpip模式设置")]
-    [Tooltip("是否使用tcpip 5555模式")]
-    public Toggle tcpipModeToggle;
-
     [Header("UI颜色设置")]
     public Color enabledColor = Color.green;
     public Color disabledColor = Color.red;
@@ -109,8 +105,7 @@ public class ADBUIController : MonoBehaviour
             return;
         }
 
-        bool useTcpipMode = tcpipModeToggle != null && tcpipModeToggle.isOn;
-        adbManager.EnableADB(useTcpipMode);
+        adbManager.EnableADB();
 
         // 更新UI反馈
         if (statusText != null)
@@ -169,10 +164,6 @@ public class ADBUIController : MonoBehaviour
 
         if (disableButton != null)
             disableButton.interactable = isEnabled;
-
-        // 更新tcpip模式切换开关
-        if (tcpipModeToggle != null)
-            tcpipModeToggle.interactable = !isEnabled;
     }
 
     private void OnConnectionInfoUpdated(string ip, int port)
