@@ -162,9 +162,19 @@ public class UnityADBBridge {
     // ========== Unity调用的接口方法 ==========
 
     /**
-     * 获取当前ADB是否启用
+     * 获取当前ADB是否启用（直接从系统设置读取）
      */
     public boolean isADBEnabled() {
+        try {
+            int adbWifiEnabled = Settings.Global.getInt(
+                context.getContentResolver(),
+                "adb_wifi_enabled",
+                0
+            );
+            isEnabled = (adbWifiEnabled == 1);
+        } catch (Exception e) {
+            Log.e(TAG, "Error reading adb_wifi_enabled: " + e.getMessage());
+        }
         return isEnabled;
     }
 

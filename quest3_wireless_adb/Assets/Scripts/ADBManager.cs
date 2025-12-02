@@ -63,7 +63,17 @@ public class ADBManager : MonoBehaviour
     /// </summary>
     private void InitializeCommandReceiver()
     {
-        // 创建 ADBCommandReceiver GameObject
+        // 创建 ADBBroadcastListener GameObject（始终激活，处理广播）
+        GameObject listenerObj = GameObject.Find("ADBBroadcastListener");
+        if (listenerObj == null)
+        {
+            listenerObj = new GameObject("ADBBroadcastListener");
+            listenerObj.AddComponent<ADBBroadcastListener>();
+            DontDestroyOnLoad(listenerObj);
+            Debug.Log("[ADBManager] ADBBroadcastListener created");
+        }
+
+        // 创建 ADBCommandReceiver GameObject（处理声音和震动逻辑）
         GameObject receiverObj = GameObject.Find("ADBCommandReceiver");
         if (receiverObj == null)
         {
@@ -328,10 +338,35 @@ public class ADBManager : MonoBehaviour
     private void AutoEnableADB()
     {
 #if UNITY_ANDROID && !UNITY_EDITOR
-        if (isInitialized && HasRequiredPermissions() && !isADBEnabled)
+        if (!isInitialized || !HasRequiredPermissions())
         {
-            Debug.Log("[ADBManager] Auto-enabling ADB on startup");
+            Debug.Log("[ADBManager] Cannot auto-enable: not initialized or no permission");
+            return;
+        }
+
+        // 直接从系统读取真实状态，不依赖缓存的 isADBEnabled
+        bool isCurrentlyEnabled = false;
+        try
+        {
+            isCurrentlyEnabled = unityADBBridge.Call<bool>("isADBEnabled");
+            // 同时触发 Java 端更新状态
+            unityADBBridge.Call("updateStatus");
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("[ADBManager] Error checking ADB status: " + e.Message);
+        }
+
+        if (!isCurrentlyEnabled)
+        {
+            Debug.Log("[ADBManager] Auto-enabling ADB");
             EnableADB();
+        }
+        else
+        {
+            Debug.Log("[ADBManager] ADB already enabled");
+            // 更新本地状态
+            Invoke("ReadStatus", 0.5f);
         }
 #endif
     }
@@ -339,5 +374,31 @@ public class ADBManager : MonoBehaviour
     void OnDestroy()
     {
         CancelInvoke();
+    }
+
+    /// <summary>
+    /// 应用从后台恢复时调用
+    /// </summary>
+    void OnApplicationPause(bool pauseStatus)
+    {
+        if (!pauseStatus)
+        {
+            // 从后台恢复，延迟检查并启用 ADB
+            Debug.Log("[ADBManager] App resumed from pause");
+            Invoke("AutoEnableADB", 2f);
+        }
+    }
+
+    /// <summary>
+    /// 应用获得焦点时调用
+    /// </summary>
+    void OnApplicationFocus(bool hasFocus)
+    {
+        if (hasFocus)
+        {
+            // 获得焦点，延迟检查并启用 ADB
+            Debug.Log("[ADBManager] App gained focus");
+            Invoke("AutoEnableADB", 2f);
+        }
     }
 }

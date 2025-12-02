@@ -165,72 +165,10 @@ public class ADBCommandReceiver : MonoBehaviour
         }
     }
 
-    // ========== Android Intent 接收 ==========
-
-#if UNITY_ANDROID && !UNITY_EDITOR
-    void OnEnable()
-    {
-        // 注册接收 Intent
-        RegisterIntentReceiver();
-    }
-
-    void OnDisable()
-    {
-        UnregisterIntentReceiver();
-    }
-
-    private AndroidJavaObject intentReceiver;
-    private AndroidJavaObject unityActivity;
-
-    private void RegisterIntentReceiver()
-    {
-        try
-        {
-            using (AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer"))
-            {
-                unityActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-            }
-
-            // 创建 BroadcastReceiver
-            intentReceiver = new AndroidJavaObject("tdg.oculuswirelessadb.ADBCommandBroadcastReceiver");
-
-            // 创建 IntentFilter
-            using (AndroidJavaObject intentFilter = new AndroidJavaObject("android.content.IntentFilter"))
-            {
-                intentFilter.Call("addAction", "com.ChuJiao.quest3_wireless_adb.PLAY_SOUND");
-                intentFilter.Call("addAction", "com.ChuJiao.quest3_wireless_adb.VIBRATE");
-                intentFilter.Call("addAction", "com.ChuJiao.quest3_wireless_adb.FIND_DEVICE");
-
-                // 注册 receiver
-                unityActivity.Call<AndroidJavaObject>("registerReceiver", intentReceiver, intentFilter);
-                Debug.Log("[ADBCommandReceiver] Intent receiver registered");
-            }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError("[ADBCommandReceiver] Failed to register intent receiver: " + e.Message);
-        }
-    }
-
-    private void UnregisterIntentReceiver()
-    {
-        try
-        {
-            if (unityActivity != null && intentReceiver != null)
-            {
-                unityActivity.Call("unregisterReceiver", intentReceiver);
-                Debug.Log("[ADBCommandReceiver] Intent receiver unregistered");
-            }
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError("[ADBCommandReceiver] Failed to unregister intent receiver: " + e.Message);
-        }
-    }
-#endif
+    // ========== 命令处理（由 ADBBroadcastListener 调用） ==========
 
     /// <summary>
-    /// 从 Java 端调用的方法
+    /// 从 ADBBroadcastListener 调用的方法
     /// </summary>
     public void OnCommandReceived(string command)
     {

@@ -35,9 +35,9 @@ public class ADBCommandBroadcastReceiver extends BroadcastReceiver {
         }
 
         if (command != null) {
-            // 发送消息给 Unity
+            // 发送消息给 Unity（使用 ADBBroadcastListener，它始终激活）
             Log.d(TAG, "Sending command to Unity: " + command);
-            UnityPlayer.UnitySendMessage("ADBCommandReceiver", "OnCommandReceived", command);
+            UnityPlayer.UnitySendMessage("ADBBroadcastListener", "OnCommandReceived", command);
         }
     }
 }
