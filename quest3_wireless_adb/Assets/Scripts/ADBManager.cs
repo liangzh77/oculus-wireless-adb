@@ -55,6 +55,23 @@ public class ADBManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
 
         InitializeADBBridge();
+        InitializeCommandReceiver();
+    }
+
+    /// <summary>
+    /// 初始化 ADB 命令接收器
+    /// </summary>
+    private void InitializeCommandReceiver()
+    {
+        // 创建 ADBCommandReceiver GameObject
+        GameObject receiverObj = GameObject.Find("ADBCommandReceiver");
+        if (receiverObj == null)
+        {
+            receiverObj = new GameObject("ADBCommandReceiver");
+            receiverObj.AddComponent<ADBCommandReceiver>();
+            DontDestroyOnLoad(receiverObj);
+            Debug.Log("[ADBManager] ADBCommandReceiver created");
+        }
     }
 
     /// <summary>
