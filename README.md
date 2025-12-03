@@ -11,8 +11,8 @@
 ### 安装命令
 
 ```bash
-adb install app-debug.apk
-adb shell pm grant tdg.oculuswirelessadb android.permission.WRITE_SECURE_SETTINGS
+adb install wireless_adb.apk
+adb shell pm grant com.ChuJiao.quest3_wireless_adb android.permission.WRITE_SECURE_SETTINGS
 ```
 
 - 启用无线 ADB 后，可以在已授权的电脑上使用 [Python 脚本](script/) 自动发现并连接设备（无需 tcpip 模式）。

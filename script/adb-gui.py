@@ -139,9 +139,11 @@ class ADBDeviceGUI:
         ttk.Separator(button_frame, orient=tk.HORIZONTAL).pack(fill=tk.X, pady=10)
 
         ttk.Button(button_frame, text="授予权限", command=self.grant_permission, width=15).pack(pady=5)
-        ttk.Button(button_frame, text="撤销权限", command=self.revoke_permission, width=15).pack(pady=5)
+        self.revoke_btn = ttk.Button(button_frame, text="撤销权限", command=self.revoke_permission, width=15, state=tk.DISABLED)
+        self.revoke_btn.pack(pady=5)
         ttk.Button(button_frame, text="授予全部", command=self.grant_permission_all, width=15).pack(pady=5)
-        ttk.Button(button_frame, text="撤销全部", command=self.revoke_permission_all, width=15).pack(pady=5)
+        self.revoke_all_btn = ttk.Button(button_frame, text="撤销全部", command=self.revoke_permission_all, width=15, state=tk.DISABLED)
+        self.revoke_all_btn.pack(pady=5)
 
         # 底部：日志区域
         log_frame = ttk.LabelFrame(self.root, text="日志", padding="5")
