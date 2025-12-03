@@ -180,27 +180,14 @@ def scan_devices(scan_duration=10):
         for addr in listener.discovered_devices:
             print(f"  - {addr}")
 
-        # 询问是否继续扫描
-        print("-" * 40)
-        try:
-            response = input("Continue scanning? (y/N): ").strip().lower()
-            if response == 'y':
-                # 合并之前的发现
-                previous_devices = listener.discovered_devices.copy()
-                additional = scan_devices(scan_duration)
-                # 合并设备
-                previous_devices.update(additional)
-                listener.discovered_devices = previous_devices
-        except EOFError:
-            # 非交互式环境，直接继续
-            print("N")
-
-        # 保存发现的设备
+        # 保存发现的设备（替换原有列表）
         save_devices(listener.discovered_devices)
-        print(f"Total {len(listener.discovered_devices)} device(s) saved to devices.json")
+        print("-" * 40)
+        print(f"Saved {len(listener.discovered_devices)} device(s) to devices.json")
     else:
         print("No devices found.")
         # 询问是否重试
+        print("-" * 40)
         try:
             response = input("Retry scanning? (y/N): ").strip().lower()
             if response == 'y':
