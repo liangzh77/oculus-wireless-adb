@@ -175,19 +175,23 @@ def scan_devices(scan_duration=10):
 
     # 显示结果
     print("-" * 40)
-    if listener.discovered_devices:
-        print(f"Found {len(listener.discovered_devices)} device(s)")
+    count = len(listener.discovered_devices)
+
+    if count > 0:
+        print(f"Found {count} device(s)")
         for addr in listener.discovered_devices:
             print(f"  - {addr}")
-
-        # 保存发现的设备（替换原有列表）
-        save_devices(listener.discovered_devices)
-        print("-" * 40)
-        print(f"Saved {len(listener.discovered_devices)} device(s) to devices.json")
     else:
         print("No devices found.")
+
+    # 保存发现的设备（替换原有列表，未发现时保存空列表）
+    save_devices(listener.discovered_devices)
+    print("-" * 40)
+    if count > 0:
+        print(f"Saved {count} device(s) to devices.json")
+    else:
+        print("Device list cleared (devices.json now empty)")
         # 询问是否重试
-        print("-" * 40)
         try:
             response = input("Retry scanning? (y/N): ").strip().lower()
             if response == 'y':
