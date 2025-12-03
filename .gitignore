@@ -88,6 +88,9 @@ script/test_*.py
 script/使用说明.md
 log.txt
 
+# User-specific device data
+script/devices.json
+
 # Unity generated files
 quest3_wireless_adb/Library/
 quest3_wireless_adb/Temp/
