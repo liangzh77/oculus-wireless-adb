@@ -82,14 +82,21 @@ app-*.apk
 
 # Android Platform Tools
 script/platform-tools/
+quest3_wireless_adb/script/platform-tools/
 
 # Test and temporary files
 script/test_*.py
+quest3_wireless_adb/script/test_*.py
 script/使用说明.md
+quest3_wireless_adb/script/使用说明.md
 log.txt
 
 # User-specific device data
 script/devices.json
+quest3_wireless_adb/script/devices.json
+
+# Downloaded APKs
+quest3_wireless_adb/script/apks/
 
 # Unity generated files
 quest3_wireless_adb/Library/
