@@ -82,7 +82,6 @@ app-*.apk
 
 # Android Platform Tools
 script/platform-tools/
-quest3_wireless_adb/script/platform-tools/
 
 # Test and temporary files
 script/test_*.py
