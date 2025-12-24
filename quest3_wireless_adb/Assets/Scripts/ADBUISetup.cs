@@ -115,7 +115,46 @@ public class ADBUISetup : MonoBehaviour
         Button refreshBtn = CreateButton(panelObj, "RefreshButton", "刷新状态",
             new Vector2(250, -100), new Vector2(200, 80), new Color(0.3f, 0.5f, 0.8f));
 
-        // 11. 创建 ADB UI Controller 并关联组件
+        // 11. 创建 Panel2 (应用列表面板)
+        GameObject panel2Obj = new GameObject("Panel2");
+        panel2Obj.transform.SetParent(canvasObj.transform, false);
+
+        Image panel2Image = panel2Obj.AddComponent<Image>();
+        panel2Image.color = new Color(0.15f, 0.15f, 0.15f, 0.95f);
+
+        RectTransform panel2Rect = panel2Obj.GetComponent<RectTransform>();
+        panel2Rect.anchorMin = new Vector2(0, 0);
+        panel2Rect.anchorMax = new Vector2(1, 1);
+        panel2Rect.offsetMin = Vector2.zero;
+        panel2Rect.offsetMax = Vector2.zero;
+
+        // Panel2 标题
+        CreateTextTMP(panel2Obj, "Panel2Title", "已安装应用列表",
+            new Vector2(0, 450), new Vector2(800, 80), 56, TextAlignmentOptions.Center);
+
+        // 刷新应用列表按钮
+        Button refreshAppsBtn = CreateButton(panel2Obj, "RefreshAppsButton", "刷新应用列表",
+            new Vector2(-300, 360), new Vector2(250, 70), new Color(0.2f, 0.6f, 0.3f));
+
+        // 应用计数文本
+        TextMeshProUGUI appCountText = CreateTextTMP(panel2Obj, "AppCountText", "应用数量: 0",
+            new Vector2(200, 360), new Vector2(400, 60), 36, TextAlignmentOptions.Center);
+
+        // 创建 app_list 滚动视图
+        GameObject appListObj = CreateScrollableAppList(panel2Obj);
+
+        // 返回按钮（切换到Panel1）
+        Button backToPanel1Btn = CreateButton(panel2Obj, "BackToPanel1Button", "返回控制面板",
+            new Vector2(0, -450), new Vector2(250, 70), new Color(0.5f, 0.5f, 0.5f));
+
+        // 在 Panel 中添加切换按钮
+        Button showAppsBtn = CreateButton(panelObj, "ShowAppsButton", "查看应用列表",
+            new Vector2(0, -250), new Vector2(250, 70), new Color(0.4f, 0.4f, 0.7f));
+
+        // 默认隐藏 Panel2
+        panel2Obj.SetActive(false);
+
+        // 12. 创建 ADB UI Controller 并关联组件
         GameObject controllerObj = new GameObject("ADB UI Controller");
         controllerObj.transform.SetParent(canvasObj.transform, false);
 
@@ -130,6 +169,16 @@ public class ADBUISetup : MonoBehaviour
         controller.enabledColor = enabledColor;
         controller.disabledColor = disabledColor;
         controller.neutralColor = neutralColor;
+
+        // 设置应用列表相关组件
+        controller.panel1 = panelObj;
+        controller.panel2 = panel2Obj;
+        controller.showAppsButton = showAppsBtn;
+        controller.backToPanel1Button = backToPanel1Btn;
+        controller.refreshAppsButton = refreshAppsBtn;
+        controller.appCountText = appCountText;
+        controller.appListContent = appListObj.transform.Find("Viewport/Content")?.gameObject;
+        controller.appListScrollRect = appListObj.GetComponent<ScrollRect>();
 
         // 13. 创建 ADB Manager
         GameObject managerObj = GameObject.Find("ADBManager");
@@ -201,6 +250,113 @@ public class ADBUISetup : MonoBehaviour
         textRect.offsetMax = Vector2.zero;
 
         return button;
+    }
+
+    /// <summary>
+    /// 创建可滚动的应用列表
+    /// </summary>
+    private GameObject CreateScrollableAppList(GameObject parent)
+    {
+        // 创建 ScrollView 容器
+        GameObject scrollViewObj = new GameObject("app_list");
+        scrollViewObj.transform.SetParent(parent.transform, false);
+
+        Image scrollBg = scrollViewObj.AddComponent<Image>();
+        scrollBg.color = new Color(0.08f, 0.08f, 0.08f, 1f);
+
+        RectTransform scrollRect = scrollViewObj.GetComponent<RectTransform>();
+        scrollRect.anchoredPosition = new Vector2(0, -50);
+        scrollRect.sizeDelta = new Vector2(1600, 700);
+
+        ScrollRect scroll = scrollViewObj.AddComponent<ScrollRect>();
+        scroll.horizontal = false;
+        scroll.vertical = true;
+        scroll.movementType = ScrollRect.MovementType.Elastic;
+        scroll.elasticity = 0.1f;
+        scroll.scrollSensitivity = 30f;
+
+        // 添加 Mask
+        Mask mask = scrollViewObj.AddComponent<Mask>();
+        mask.showMaskGraphic = true;
+
+        // 创建 Viewport
+        GameObject viewportObj = new GameObject("Viewport");
+        viewportObj.transform.SetParent(scrollViewObj.transform, false);
+
+        Image viewportImage = viewportObj.AddComponent<Image>();
+        viewportImage.color = new Color(1, 1, 1, 0);
+
+        RectTransform viewportRect = viewportObj.GetComponent<RectTransform>();
+        viewportRect.anchorMin = Vector2.zero;
+        viewportRect.anchorMax = Vector2.one;
+        viewportRect.offsetMin = Vector2.zero;
+        viewportRect.offsetMax = Vector2.zero;
+
+        // 创建 Content 容器
+        GameObject contentObj = new GameObject("Content");
+        contentObj.transform.SetParent(viewportObj.transform, false);
+
+        RectTransform contentRect = contentObj.AddComponent<RectTransform>();
+        contentRect.anchorMin = new Vector2(0, 1);
+        contentRect.anchorMax = new Vector2(1, 1);
+        contentRect.pivot = new Vector2(0.5f, 1);
+        contentRect.anchoredPosition = Vector2.zero;
+        contentRect.sizeDelta = new Vector2(0, 0);
+
+        // 添加 VerticalLayoutGroup
+        UnityEngine.UI.VerticalLayoutGroup layoutGroup = contentObj.AddComponent<UnityEngine.UI.VerticalLayoutGroup>();
+        layoutGroup.childAlignment = TextAnchor.UpperCenter;
+        layoutGroup.childControlWidth = true;
+        layoutGroup.childControlHeight = false;
+        layoutGroup.childForceExpandWidth = true;
+        layoutGroup.childForceExpandHeight = false;
+        layoutGroup.spacing = 10;
+        layoutGroup.padding = new RectOffset(20, 20, 20, 20);
+
+        // 添加 ContentSizeFitter
+        UnityEngine.UI.ContentSizeFitter sizeFitter = contentObj.AddComponent<UnityEngine.UI.ContentSizeFitter>();
+        sizeFitter.verticalFit = UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize;
+
+        // 关联 ScrollRect
+        scroll.viewport = viewportRect;
+        scroll.content = contentRect;
+
+        // 创建垂直滚动条
+        GameObject scrollbarObj = new GameObject("Scrollbar");
+        scrollbarObj.transform.SetParent(scrollViewObj.transform, false);
+
+        Image scrollbarImage = scrollbarObj.AddComponent<Image>();
+        scrollbarImage.color = new Color(0.3f, 0.3f, 0.3f, 1f);
+
+        Scrollbar scrollbar = scrollbarObj.AddComponent<Scrollbar>();
+        scrollbar.direction = Scrollbar.Direction.BottomToTop;
+
+        RectTransform scrollbarRect = scrollbarObj.GetComponent<RectTransform>();
+        scrollbarRect.anchorMin = new Vector2(1, 0);
+        scrollbarRect.anchorMax = new Vector2(1, 1);
+        scrollbarRect.pivot = new Vector2(1, 0.5f);
+        scrollbarRect.anchoredPosition = new Vector2(0, 0);
+        scrollbarRect.sizeDelta = new Vector2(20, 0);
+
+        // 创建滚动条滑块
+        GameObject handleObj = new GameObject("Handle");
+        handleObj.transform.SetParent(scrollbarObj.transform, false);
+
+        Image handleImage = handleObj.AddComponent<Image>();
+        handleImage.color = new Color(0.6f, 0.6f, 0.6f, 1f);
+
+        RectTransform handleRect = handleObj.GetComponent<RectTransform>();
+        handleRect.anchorMin = Vector2.zero;
+        handleRect.anchorMax = Vector2.one;
+        handleRect.offsetMin = new Vector2(4, 4);
+        handleRect.offsetMax = new Vector2(-4, -4);
+
+        scrollbar.handleRect = handleRect;
+        scrollbar.targetGraphic = handleImage;
+        scroll.verticalScrollbar = scrollbar;
+        scroll.verticalScrollbarVisibility = ScrollRect.ScrollbarVisibility.AutoHideAndExpandViewport;
+
+        return scrollViewObj;
     }
 
     /// <summary>

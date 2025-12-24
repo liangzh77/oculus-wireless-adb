@@ -1,0 +1,1 @@
+adb shell pm grant com.ChuJiao.quest3_wireless_adb android.permission.WRITE_SECURE_SETTINGS

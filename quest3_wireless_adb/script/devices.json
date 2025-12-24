@@ -1,0 +1,14 @@
+{
+  "192.168.5.25:36583": {
+    "ip": "192.168.5.25",
+    "port": 36583,
+    "name": "adb-2G0YC1ZG0Z02VS-djpwwQ (2)._adb-tls-connect._tcp.local.",
+    "address": "192.168.5.25:36583"
+  },
+  "192.168.5.25:37687": {
+    "ip": "192.168.5.25",
+    "port": 37687,
+    "name": "adb-2G0YC1ZG0Z02VS-djpwwQ._adb-tls-connect._tcp.local.",
+    "address": "192.168.5.25:37687"
+  }
+}

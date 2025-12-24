@@ -23,6 +23,12 @@ public class VRUIInput : MonoBehaviour
     private Button lastHoveredButton;
     private Toggle lastHoveredToggle;
 
+    // 射线拖动滚动相关
+    private ScrollRect currentScrollRect;
+    private bool isDraggingScroll = false;
+    private Vector3 lastDragPoint;
+    private float dragScrollSpeed = 0.003f;  // 拖动滚动灵敏度
+
     void Awake()
     {
         Debug.Log("[VRUIInput] Awake called on " + gameObject.name);
@@ -116,6 +122,26 @@ public class VRUIInput : MonoBehaviour
                     col.center = Vector3.zero;
 
                     Debug.Log($"[VRUIInput] Added collider to toggle: {toggle.name}, size={col.size}, world pos={toggle.transform.position}");
+                }
+            }
+        }
+
+        // 为所有 ScrollRect 添加碰撞体
+        ScrollRect[] scrollRects = FindObjectsOfType<ScrollRect>(true);
+        Debug.Log($"[VRUIInput] Found {scrollRects.Length} ScrollRects");
+
+        foreach (var scrollRect in scrollRects)
+        {
+            if (scrollRect.GetComponent<Collider>() == null)
+            {
+                BoxCollider col = scrollRect.gameObject.AddComponent<BoxCollider>();
+                RectTransform rt = scrollRect.GetComponent<RectTransform>();
+                if (rt != null)
+                {
+                    col.size = new Vector3(rt.rect.width, rt.rect.height, 50f);
+                    col.center = Vector3.zero;
+
+                    Debug.Log($"[VRUIInput] Added collider to ScrollRect: {scrollRect.name}, size={col.size}, world pos={scrollRect.transform.position}");
                 }
             }
         }
@@ -238,28 +264,64 @@ public class VRUIInput : MonoBehaviour
             Debug.Log($"[VRUIInput] Ray: origin={rayOrigin}, direction={rayDirection}, length={rayLength}");
         }
 
-        // 物理射线检测
-        RaycastHit hit;
+        // 物理射线检测 - 使用 RaycastAll 获取所有命中的碰撞体
+        RaycastHit[] hits = Physics.RaycastAll(rayOrigin, rayDirection, rayLength);
         Button hoveredButton = null;
         Toggle hoveredToggle = null;
+        ScrollRect hoveredScrollRect = null;
+        RaycastHit closestHit = default;
+        float closestDistance = float.MaxValue;
 
-        if (Physics.Raycast(rayOrigin, rayDirection, out hit, rayLength))
+        // 遍历所有命中，优先查找 Button 和 Toggle
+        foreach (var hit in hits)
         {
-            // 每300帧输出一次命中信息
-            if (frameCount % 300 == 0)
+            // 先找 Button
+            Button btn = hit.collider.GetComponent<Button>();
+            if (btn == null)
+                btn = hit.collider.GetComponentInParent<Button>();
+
+            if (btn != null && btn.interactable)
             {
-                Debug.Log($"[VRUIInput] Raycast hit: {hit.collider.gameObject.name} at {hit.point}");
+                hoveredButton = btn;
+                closestHit = hit;
+                break; // Button 优先级最高
             }
 
-            // 检查命中的对象
-            hoveredButton = hit.collider.GetComponent<Button>();
-            if (hoveredButton == null)
-                hoveredButton = hit.collider.GetComponentInParent<Button>();
+            // 再找 Toggle
+            Toggle tog = hit.collider.GetComponent<Toggle>();
+            if (tog == null)
+                tog = hit.collider.GetComponentInParent<Toggle>();
 
-            hoveredToggle = hit.collider.GetComponent<Toggle>();
-            if (hoveredToggle == null)
-                hoveredToggle = hit.collider.GetComponentInParent<Toggle>();
+            if (tog != null && tog.interactable)
+            {
+                hoveredToggle = tog;
+                closestHit = hit;
+                break; // Toggle 次优先
+            }
 
+            // 记录最近的 ScrollRect
+            ScrollRect sr = hit.collider.GetComponent<ScrollRect>();
+            if (sr == null)
+                sr = hit.collider.GetComponentInParent<ScrollRect>();
+
+            if (sr != null && hit.distance < closestDistance)
+            {
+                hoveredScrollRect = sr;
+                closestHit = hit;
+                closestDistance = hit.distance;
+            }
+        }
+
+        // 每300帧输出一次命中信息
+        if (frameCount % 300 == 0 && hits.Length > 0)
+        {
+            Debug.Log($"[VRUIInput] RaycastAll hit {hits.Length} objects, first: {hits[0].collider.gameObject.name}");
+            if (hoveredButton != null)
+                Debug.Log($"[VRUIInput] Found button: {hoveredButton.name}");
+        }
+
+        if (hits.Length > 0)
+        {
             if (hoveredButton != null || hoveredToggle != null)
             {
                 // 更新射线颜色和终点
@@ -267,7 +329,7 @@ public class VRUIInput : MonoBehaviour
                 {
                     lineRenderer.startColor = hoverColor;
                     lineRenderer.endColor = hoverColor;
-                    lineRenderer.SetPosition(1, hit.point);
+                    lineRenderer.SetPosition(1, closestHit.point);
                 }
 
                 // 每300帧输出一次悬停信息
@@ -295,6 +357,46 @@ public class VRUIInput : MonoBehaviour
                     }
                 }
             }
+            else if (hoveredScrollRect != null)
+            {
+                // 悬停在 ScrollRect 上
+                if (lineRenderer != null)
+                {
+                    lineRenderer.startColor = hoverColor;
+                    lineRenderer.endColor = hoverColor;
+                    lineRenderer.SetPosition(1, closestHit.point);
+                }
+
+                // 处理拖动滚动
+                if (isPressed)
+                {
+                    if (!isDraggingScroll)
+                    {
+                        // 开始拖动
+                        isDraggingScroll = true;
+                        currentScrollRect = hoveredScrollRect;
+                        lastDragPoint = closestHit.point;
+                        Debug.Log($"[VRUIInput] Started dragging ScrollRect: {hoveredScrollRect.name}");
+                    }
+                    else if (currentScrollRect == hoveredScrollRect)
+                    {
+                        // 继续拖动 - 计算拖动距离
+                        Vector3 dragDelta = closestHit.point - lastDragPoint;
+
+                        // 使用垂直方向的移动来滚动（在世界空间中是 Y 轴）
+                        // 但需要考虑 Canvas 的朝向，所以用本地空间的 Y
+                        float scrollDelta = Vector3.Dot(dragDelta, hoveredScrollRect.transform.up) * dragScrollSpeed;
+
+                        if (Mathf.Abs(scrollDelta) > 0.0001f)
+                        {
+                            float newPos = currentScrollRect.verticalNormalizedPosition + scrollDelta;
+                            currentScrollRect.verticalNormalizedPosition = Mathf.Clamp01(newPos);
+                        }
+
+                        lastDragPoint = closestHit.point;
+                    }
+                }
+            }
             else
             {
                 // 命中其他物体
@@ -302,7 +404,7 @@ public class VRUIInput : MonoBehaviour
                 {
                     lineRenderer.startColor = normalColor;
                     lineRenderer.endColor = normalColor;
-                    lineRenderer.SetPosition(1, hit.point);
+                    lineRenderer.SetPosition(1, closestHit.point);
                 }
             }
         }
@@ -314,6 +416,14 @@ public class VRUIInput : MonoBehaviour
                 lineRenderer.startColor = normalColor;
                 lineRenderer.endColor = normalColor;
             }
+        }
+
+        // 松开扳机时停止拖动
+        if (!isPressed && isDraggingScroll)
+        {
+            Debug.Log("[VRUIInput] Stopped dragging ScrollRect");
+            isDraggingScroll = false;
+            currentScrollRect = null;
         }
 
         wasPressed = isPressed;
